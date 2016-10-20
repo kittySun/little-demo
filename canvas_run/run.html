@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta charset="UTF-8">
+	<meta content="telephone=no,email=no" name="format-detection">
+	<meta content="width=device-width,initial-scale=1,user-scalable=no,maximum-scale=1,minimum-scale=1" name="viewport">
+	<meta content="telephone=no" name="format-detection" />
+	<title>抢占浴室</title>
+	<link rel="stylesheet" href="src/style.css" />
+	<link rel="stylesheet" href="src/header.css" />
+	<script src="src/aplus.js"></script>
+	<style type="text/css">
+	div {
+	    margin: 0 auto;
+	    width:10rem;
+	    text-align: center;
+	    vertical-align: middle;
+	    position: relative;
+	}
+	.btn,.start {
+	    position: fixed;
+	    bottom: 10px;
+	    width: 9.5rem;
+	    margin-left: .1rem;
+	    height: 1.5rem;
+	    font-size: .6rem;
+	    color: #fff;
+	    text-align: center;
+	    line-height: 1.5rem;
+	    border:5px solid #fff;
+	    border-radius: .2rem;
+	    background-color: #ED5959;
+	}
+	.describe {
+	    position: absolute;
+	    top: 100px;
+	    left: 1.3rem;
+	    width: 7rem;
+	    height: 2rem;
+	    border: 3px solid #fff;
+	    border-radius: .2rem;
+	    background-color: #FC8989;
+	    opacity: .8;
+	    color: #fff;
+	    padding: .2rem;
+	    font-size: .45rem;
+	}
+    canvas {
+        background-color: #8A9626
+    }
+</style>
+</head>
+<body>
+	<div id="wrapper">
+		<div id="mainContent">
+			<div>
+		    <canvas id="canvas" style="width: 10rem;" height="500px"></canvas>
+		    <div class="btn" style="display: none">
+		        脱 脱 脱
+		    </div>
+		    <div class="start">
+		        点击开始
+		    </div>
+		    <div class="describe">
+		        玩家要去洗澡，玩家快速点击“脱脱脱”按钮，加速游戏人物进入浴室的过程，最先进入浴室的为胜者。
+		    </div>
+			</div>
+		</div>
+	</div>
+	<script src="src/zepto.min.js"></script>
+	<script>
+    var canvas=document.getElementById("canvas");
+    var context=canvas.getContext("2d");
+    /*游戏开始阶段*/
+    var bg = new Image();
+    bg.src="src/bg.png";
+    var BG={
+        imgs:bg,
+        width:2144,
+        height:450
+    }
+    /*构造器作用：低偶合、实现动态*/
+    function Bg(config){
+        this.imgs=config.imgs;
+        this.width=config.width;
+        this.height=config.height;
+        this.x1=0;
+        this.y1=0;
+        this.down=false;
+        this.paint=function(){
+            context.drawImage(this.imgs,this.x1,this.y1,2144,450);
+        }
+        this.step=function(){
+            if(!this.down){
+                this.x1-=60;
+            }
+        }
+        this.bang=function(){
+            if(this.x1<-1840){
+                this.down=true;
+            }
+        }
+    }
+    var sky=new Bg(BG);
+    /*玩家奔跑*/
+    var heros=[];
+    heros[0]=new Image();
+    heros[0].src="src/1.png";
+    heros[1]=new Image();
+    heros[1].src="src/2.png";
+    heros[2]=new Image();
+    heros[2].src="src/3.png";
+    heros[3]=new Image();
+    heros[3].src="src/4.png";
+    heros[4]=new Image();
+    heros[4].src="src/5.png";
+    heros[5]=new Image();
+    heros[5].src="src/6.png";
+    var HEROS={
+        imgs:heros
+    }
+    function Hero(config){
+        this.imgs=config.imgs;
+        this.startIndex=0;
+        this.x=0;
+        this.down=false;
+        this.paint=function(){
+            context.drawImage(this.imgs[this.startIndex],70,170,150,200);
+        }
+        this.step=function(){
+            if(!this.down){
+                if(this.startIndex==0){
+                    this.startIndex=1;
+                }else if(this.startIndex==1){
+                    this.startIndex=2;
+                }else if(this.startIndex==2){
+                    this.startIndex=3;
+                }else if(this.startIndex==3){
+                    this.startIndex=4;
+                }else if(this.startIndex==4){
+                    this.startIndex=5;
+                }else if(this.startIndex==5){
+                    this.startIndex=0;
+                }
+            }
+        }
+        this.bang=function(){
+            this.down=true;
+        }
+    }
+    var hero=new Hero(HEROS); 
+    /*到达终点门的出现*/
+    var door1 =new Image();
+    door1.src="src/yushi_q.png";
+    var door2 =new Image();
+    door2.src="src/yushi_h.png";
+    var DOOR1={
+        imgs:door1,
+        width:157,
+        height:300
+    }
+    var DOOR2={
+        imgs:door2,
+        width:280,
+        height:450
+    }
+    function Door(config){
+        this.imgs=config.imgs;
+        this.width=config.width;
+        this.height=config.height;
+        this.x=this.width;
+        this.y=0;
+        this.down=false;
+        this.paint=function(){
+            context.drawImage(this.imgs,this.x+200+1456,this.y,310,450);
+        }
+        this.step=function(){
+            if(!this.down){
+                this.x-=60;
+            }
+        }
+        this.bang=function(){
+            if(this.x<-1626){
+                this.down=true;
+            }
+        }
+        this.checkHit=function(wo){
+            return wo.x>this.x+1636
+        }
+    }
+    function Door2(config){
+        this.imgs=config.imgs;
+        this.width=config.width;
+        this.height=config.height;
+        this.x=this.width;
+        this.y=0;
+        this.down=false;
+        this.paint=function(){
+            context.drawImage(this.imgs,this.x+1456,this.y,150,325);
+        }
+        this.step=function(){
+            if(!this.down){
+                this.x-=60;
+            }
+        }
+        this.bang=function(){
+            if(this.x<-1496){
+                this.down=true;
+            }
+        }
+    }
+    var door=new Door(DOOR1);
+    var wall=new Door2(DOOR2);
+    /*脱衣服*/
+    var coat = new Image();
+    coat.src="src/coat5.png";
+    var COAT={
+        imgs:coat,
+        width:153,
+        height:116
+    }
+    function Coat(config){
+        this.imgs=config.imgs;
+        this.width=config.width;
+        this.height=config.height;
+        this.x1=50;
+        this.y1=260;
+        this.down=false;
+        this.paint=function(){
+            context.drawImage(this.imgs,this.x1,this.y1,80,60);
+        }
+        this.step=function(){
+            if(!this.down){
+                this.x1-=15;
+                this.y1+=20;
+            }
+        }
+        this.bang=function(){
+            if(this.x1<10){
+                this.down=true;
+            }
+        }
+    }
+    var clothes=new Coat(COAT);
+    function btn(){
+        $('.btn').on('tap',function(){
+            sky.step();
+            wall.step();
+            hero.step();
+            door.step();
+        }); 
+    }
+    function hitEnemies(){
+        if(door.checkHit(hero)){
+            hero.bang();
+            clothes.paint();
+            clothes.step();
+            clothes.bang();
+            timeEnd = (new Date()).valueOf();
+            time = (timeEnd - timeStart)/1000;
+            $('.btn').text("成绩 "+time);
+            setTimeout(function(){
+                window.sendClock && clearInterval(window.sendClock);
+            },200);
+                
+        }
+    }
+    window.sendClock = setInterval(function(){
+        sky.paint();
+        wall.paint();
+        hero.paint();
+        door.paint();
+        wall.bang();
+        door.bang();
+        sky.bang();
+        hitEnemies();
+    },100);
+    $(function(){
+       $('.start').on('tap',function(){
+            timeStart = (new Date()).valueOf();
+            $('.describe').hide();
+            $(this).hide().prev().show();
+            btn();
+       });
+    });
+</script>
+</body>
